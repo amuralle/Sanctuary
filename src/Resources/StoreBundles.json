@@ -38963,5 +38963,37 @@
     "SkuId": 1,
     "MemberDiscount": 10,
     "MembersOnlyPrice": 1
+  },
+  {
+    "Comment": "Custom Mahogany Hightops",
+    "LaunchTime": "2013-04-30T07:00:00+00:00",
+    "ExpireTime": "2090-01-01T08:00:00+00:00",
+    "Image": {
+      "Image": "3645",
+      "Tint": "229"
+    },
+    "TintGroup": "24",
+    "Entries": [
+      {
+        "Quantity": 1,
+        "GameItemId": 17332,
+        "MarketingItemId": 28420
+      }
+    ],
+    "Id": 100019,
+    "NameId": 8476,
+    "DescriptionId": 1114,
+    "Status": 1,
+    "CurrencyType": 1,
+    "Price": 1,
+    "AltCurrencyPrice": 1,
+    "IsTintable": true,
+    "StoreId": 1,
+    "CategoryGroupId": 10002,
+    "CategoryDisplayOrder": 10,
+    "DiscountType": 410000,
+    "SkuId": 1,
+    "MemberDiscount": 10,
+    "MembersOnlyPrice": 1
   }
 ]

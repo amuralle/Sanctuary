@@ -26,8 +26,14 @@ public class Npc : IEntity
     public int NameId { get; set; }
     public string? Name { get; set; }
     public int SubTextNameId { get; set; }
+    public bool Unknown33 { get; set; }
+    public bool Unknown34 { get; set; }
+    public int Unknown36 { get; set; }
+    public int TemporaryAppearance { get; set; }
     public bool HideNamePlate { get; set; }
     public int NameplateImageId { get; set; }
+    public float NameColor { get; set; }
+    public float NameScale { get; set; }
     public float VerticalOffset { get; set; }
 
     public int ModelId { get; set; }
@@ -62,6 +68,18 @@ public class Npc : IEntity
     public byte CursorId { get; set; }
 
     // public NotificationInfo? Notification { get; set; }
+
+    public string? MockCollectionNodeKey { get; set; }
+    public string? MockCollectionRegionKey { get; set; }
+    public int MockCollectionPointIndex { get; set; } = -1;
+    public int MockCollectionId { get; set; } = 100001;
+    public Vector4 MockCollectionSpawnCenter { get; set; }
+    public float MockCollectionSpawnRadius { get; set; }
+    public bool MockCollectionShuffleOnRespawn { get; set; }
+    public int MockCollectionRespawnSeconds { get; set; }
+    public List<int> MockCollectionRewardItemDefinitionIds { get; set; } = [];
+    public List<int> MockCollectionEntryIds { get; set; } = [];
+    public List<Npc> MockCollectionCompanionNodes { get; set; } = [];
 
     public List<CharacterAttachmentData> Attachments { get; set; } = [];
 
@@ -199,13 +217,13 @@ public class Npc : IEntity
             RunAnimId = default, // Sprint GroupAnimId
             StandAnimId = default, // Idle GroupAnimId
 
-            Unknown33 = default,
-            Unknown34 = default,
+            Unknown33 = Unknown33,
+            Unknown34 = Unknown34,
 
             SubTextNameId = SubTextNameId,
 
-            Unknown36 = default, // AnimationEvent
-            TemporaryAppearance = default,
+            Unknown36 = Unknown36, // AnimationEvent
+            TemporaryAppearance = TemporaryAppearance,
 
             // playerUpdatePacketAddNpc.EffectTags = TODO
 
@@ -221,7 +239,7 @@ public class Npc : IEntity
 
             Tilt = default,
 
-            NameColor = default,
+            NameColor = NameColor,
 
             AreaDefinitionId = AreaDefinitionId,
 
@@ -263,7 +281,7 @@ public class Npc : IEntity
             Unknown67 = default,
             Unknown68 = default,
 
-            NameScale = default,
+            NameScale = NameScale,
 
             NameplateImageId = NameplateImageId
         };
@@ -305,6 +323,11 @@ public class Npc : IEntity
 
     public virtual void Dispose()
     {
+        foreach (var companionNode in MockCollectionCompanionNodes.ToArray())
+            companionNode.Dispose();
+
+        MockCollectionCompanionNodes.Clear();
+
         foreach (var visiblePlayer in VisiblePlayers)
             visiblePlayer.Value.OnRemoveVisibleNpcs([this]);
 

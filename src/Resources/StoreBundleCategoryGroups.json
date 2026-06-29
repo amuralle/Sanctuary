@@ -49,6 +49,13 @@
     ]
   },
   {
+    "Comment": "Custom Clothes",
+    "Id": 10002,
+    "CategoryIds": [
+      10002
+    ]
+  },
+  {
     "Comment": "Shirts & Dresses",
     "Id": 51,
     "CategoryIds": [

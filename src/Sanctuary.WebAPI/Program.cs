@@ -34,6 +34,9 @@ builder.Services.AddOptionsWithValidateOnStart<DatabaseOptions>()
 builder.Services.AddOptionsWithValidateOnStart<WebAPIOptions>()
     .BindConfiguration(WebAPIOptions.Section);
 
+builder.Services.AddOptions<ManifestOptions>()
+    .BindConfiguration(ManifestOptions.Section);
+
 // Database
 builder.Services.AddDatabase(builder.Configuration);
 
@@ -67,7 +70,10 @@ app.UseHttpLogging();
 
 // Configure the HTTP request pipeline.
 
+app.UseClientFiles();
+
 app.MapAuthEndpoints();
+app.MapManifestEndpoints();
 app.MapPortraitEndpoints();
 
 app.Run();

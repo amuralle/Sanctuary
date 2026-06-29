@@ -173,6 +173,13 @@ To spawn an npc ```/npc spawn <NameId> <ModelId> [TextureAlias]``` TextureAlias 
 
 _For more examples, please refer to the [Documentation](https://github.com/Open-Source-Free-Realms/Sanctuary/wiki)_
 
+### Local Development Notes
+
+This fork currently includes a local development rig for launcher-based testing, collection nodes, and packet-lab experiments:
+
+- [Local Development](docs/LOCAL_DEVELOPMENT.md)
+- [Collections And Packet Lab Notes](docs/COLLECTIONS_AND_PACKET_LAB.md)
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 

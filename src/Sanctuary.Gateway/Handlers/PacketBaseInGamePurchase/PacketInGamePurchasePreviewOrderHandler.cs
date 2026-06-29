@@ -29,8 +29,20 @@ public static class PacketInGamePurchasePreviewOrderHandler
 
         _logger.LogTrace("Received {name} packet. ( {packet} )", nameof(PacketInGamePurchasePreviewOrder), packet);
 
+        var orderDetail = System.Linq.Enumerable.FirstOrDefault(packet.Order.Details);
+        _logger.LogInformation(
+            "Preview order. Player={player} TrackingId={trackingId} Coupon={coupon} Store={store} Bundle={bundle} Quantity={quantity} Tint={tint}",
+            connection.Player.Guid,
+            packet.Order.OrderTrackingId,
+            packet.Order.CouponCode,
+            orderDetail?.StoreId,
+            orderDetail?.StoreBundleId,
+            orderDetail?.Quantity,
+            orderDetail?.Tint);
+
         var packetInGamePurchasePreviewOrderResponse = new PacketInGamePurchasePreviewOrderResponse
         {
+            OrderTrackingId = packet.Order.OrderTrackingId,
             Result = 8
         };
 

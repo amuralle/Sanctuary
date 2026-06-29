@@ -90,6 +90,7 @@ builder.ConfigureServices((hostBuilderContext, serviceCollection) =>
         return ActivatorUtilities.CreateInstance<GatewayServer>(serviceProvider, udpParams);
     });
 
+    serviceCollection.AddHostedService<DevPacketLabService>();
     serviceCollection.AddHostedService<GatewayService>();
 
     // Managers

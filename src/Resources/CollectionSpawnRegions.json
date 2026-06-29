@@ -1,0 +1,15 @@
+[
+  {
+    "Key": "dev-disabled",
+    "ZoneId": 1,
+    "CenterX": 0.0,
+    "CenterY": 0.0,
+    "CenterZ": 0.0,
+    "Radius": 1.0,
+    "Count": 0,
+    "RespawnSeconds": 5,
+    "ShuffleOnRespawn": true,
+    "NodeKeys": [],
+    "Points": []
+  }
+]

@@ -32,6 +32,8 @@ public class ModelDefinitionCollection : ObservableConcurrentDictionary<int, Mod
         {
             using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
 
+            Clear();
+
             using var reader = Sep.New('^')
                 .Reader()
                 .From(fileStream);

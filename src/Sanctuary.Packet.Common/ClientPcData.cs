@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 using Sanctuary.Core.IO;
@@ -328,7 +330,20 @@ public class ClientPcData
 
     public List<ProfileTypeEntry> ProfileTypes = new();
 
-    // public List<Collections> Collections = new();
+    private static readonly byte[] MockFloraCollectionRow = Convert.FromHexString(
+        "0A0000009E4200009F420000030000004C0800005C00000001000000010900000000000000000000000F000000000000" +
+        "00000000000000803F0000000000000000000000000000000091CA73956ACC524B3D0F00007009000001000000030000" +
+        "00003D0F00000000000070090000320000000B00000000000000000000000000000000E4150000080000002900000029" +
+        "000000010000000A000000A04200004C0800006300000000000000012A0000002A000000020000000A000000A1420000" +
+        "4C0800006000000000000000002B0000002B000000030000000A000000A24200004C0800007000000000000000012C00" +
+        "00002C000000040000000A000000A34200004C0800006400000000000000002D0000002D000000050000000A000000A4" +
+        "4200004C0800005C00000000000000012E0000002E000000060000000A000000A54200004C0800006800000000000000" +
+        "002F0000002F000000070000000A000000A64200004C0800006D00000000000000013000000030000000080000000A00" +
+        "0000A74200004C080000650000000000000000");
+    private const int MockCollectionGuidOffset = 73;
+    private const int MockCollectionEntryCountOffset = 135;
+    private const int MockCollectionFirstEntryOffset = 139;
+    private const int MockCollectionEntrySize = 33;
 
     public List<ClientItem> Items = new();
 
@@ -504,7 +519,7 @@ public class ClientPcData
 
         writer.Write(ProfileTypes);
 
-        writer.Write(0); // TODO Collections
+        WriteMockCollections(writer);
 
         writer.Write(Items);
 
@@ -562,4 +577,104 @@ public class ClientPcData
 
         return writer.Buffer;
     }
+
+    private void WriteMockCollections(PacketWriter writer)
+    {
+        var ownedDefinitionIds = Items
+            .Select(x => x.Definition)
+            .ToHashSet();
+
+        var rows = CreateMockCollectionRows(Guid, ownedDefinitionIds);
+
+        writer.Write(rows.Length);
+
+        foreach (var row in rows)
+            writer.Write(row);
+    }
+
+    public static byte[][] CreateMockCollectionRows(ulong playerGuid, IReadOnlySet<int> ownedDefinitionIds)
+    {
+        return
+        [
+            CreateMockCollectionRow(
+                playerGuid,
+                ownedDefinitionIds,
+                categoryId: 10,
+                collectionId: 17054,
+                descriptionId: 17055,
+                iconId: 2124,
+                iconTintId: 92,
+                entries:
+                [
+                    new(41, 17056, 2124, 99, 11081),
+                    new(42, 17057, 2124, 96, 11082),
+                    new(43, 17058, 2124, 112, 11083),
+                    new(44, 17059, 2124, 100, 11084),
+                    new(45, 17060, 2124, 92, 11085),
+                    new(46, 17061, 2124, 104, 11086),
+                    new(47, 17062, 2124, 109, 11087),
+                    new(48, 17063, 2124, 101, 11088)
+                ]),
+            CreateMockCollectionRow(
+                playerGuid,
+                ownedDefinitionIds,
+                categoryId: 15,
+                collectionId: 41125,
+                descriptionId: 132375,
+                iconId: 729,
+                iconTintId: 0,
+                entries:
+                [
+                    new(3911, 41127, 729, 0, 3911),
+                    new(3912, 41128, 727, 0, 3912),
+                    new(3913, 41129, 726, 0, 3913),
+                    new(3914, 41130, 732, 0, 3914),
+                    new(3915, 41131, 730, 0, 3915),
+                    new(3916, 41132, 728, 0, 3916),
+                    new(3917, 41133, 735, 0, 3917),
+                    new(3918, 41134, 731, 0, 3918)
+                ])
+        ];
+    }
+
+    private static byte[] CreateMockCollectionRow(
+        ulong playerGuid,
+        IReadOnlySet<int> ownedDefinitionIds,
+        int categoryId,
+        int collectionId,
+        int descriptionId,
+        int iconId,
+        int iconTintId,
+        MockCollectionEntry[] entries)
+    {
+        var row = (byte[])MockFloraCollectionRow.Clone();
+
+        BinaryPrimitives.WriteInt32LittleEndian(row.AsSpan(0), categoryId);
+        BinaryPrimitives.WriteInt32LittleEndian(row.AsSpan(4), collectionId);
+        BinaryPrimitives.WriteInt32LittleEndian(row.AsSpan(8), descriptionId);
+        BinaryPrimitives.WriteInt32LittleEndian(row.AsSpan(16), iconId);
+        BinaryPrimitives.WriteInt32LittleEndian(row.AsSpan(20), iconTintId);
+        BinaryPrimitives.WriteUInt64LittleEndian(row.AsSpan(MockCollectionGuidOffset), playerGuid);
+        BinaryPrimitives.WriteInt32LittleEndian(row.AsSpan(MockCollectionEntryCountOffset), entries.Length);
+
+        for (var i = 0; i < entries.Length; i++)
+        {
+            var entry = entries[i];
+            var offset = MockCollectionFirstEntryOffset + i * MockCollectionEntrySize;
+
+            BinaryPrimitives.WriteInt32LittleEndian(row.AsSpan(offset), entry.Id);
+            BinaryPrimitives.WriteInt32LittleEndian(row.AsSpan(offset + 4), entry.Id);
+            BinaryPrimitives.WriteInt32LittleEndian(row.AsSpan(offset + 8), i + 1);
+            BinaryPrimitives.WriteInt32LittleEndian(row.AsSpan(offset + 12), categoryId);
+            BinaryPrimitives.WriteInt32LittleEndian(row.AsSpan(offset + 16), entry.NameId);
+            BinaryPrimitives.WriteInt32LittleEndian(row.AsSpan(offset + 20), entry.IconId);
+            BinaryPrimitives.WriteInt32LittleEndian(row.AsSpan(offset + 24), entry.IconTintId);
+            BinaryPrimitives.WriteInt32LittleEndian(row.AsSpan(offset + 28), 0);
+            row[offset + 32] = ownedDefinitionIds.Contains(entry.ItemDefinitionId) ? (byte)1 : (byte)0;
+        }
+
+        return row;
+    }
+
+    private sealed record MockCollectionEntry(int Id, int NameId, int IconId, int IconTintId, int ItemDefinitionId);
 }

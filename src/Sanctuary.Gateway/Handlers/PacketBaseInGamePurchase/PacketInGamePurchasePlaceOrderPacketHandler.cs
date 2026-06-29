@@ -282,6 +282,17 @@ public static class PacketInGamePurchasePlaceOrderPacketHandler
 
         packetInGamePurchasePlaceOrderResponse.Total = totalCost;
 
+        _logger.LogInformation(
+            "Place order success. Player={player} TrackingId={trackingId} OrderId={orderId} Store={store} Bundle={bundle} Quantity={quantity} Tint={tint} Total={total}",
+            connection.Player.Guid,
+            packet.Order.OrderTrackingId,
+            packetInGamePurchasePlaceOrderResponse.OrderId,
+            orderDetail.StoreId,
+            orderDetail.StoreBundleId,
+            orderDetail.Quantity,
+            orderDetail.Tint,
+            totalCost);
+
         connection.SendTunneled(packetInGamePurchasePlaceOrderResponse);
 
         return true;

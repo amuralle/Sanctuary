@@ -265,7 +265,7 @@ public sealed class Player : ClientPcData, IEntity
             SendTunneled(playerUpdatePacketAddNpc);
         }
 
-        /* var playerUpdatePacketNpcRelevance = new PlayerUpdatePacketNpcRelevance();
+        var playerUpdatePacketNpcRelevance = new PlayerUpdatePacketNpcRelevance();
 
         foreach (var npc in npcs)
         {
@@ -275,7 +275,7 @@ public sealed class Player : ClientPcData, IEntity
             playerUpdatePacketNpcRelevance.Entries.Add(new PlayerUpdatePacketNpcRelevance.Entry
             {
                 Guid = npc.Guid,
-                HasCursor = true,
+                Unknown = true,
                 CursorId = npc.CursorId,
                 Unknown2 = false
             });
@@ -284,7 +284,7 @@ public sealed class Player : ClientPcData, IEntity
         if (playerUpdatePacketNpcRelevance.Entries.Count > 0)
             SendTunneled(playerUpdatePacketNpcRelevance);
 
-        var playerUpdatePacketAddNotifications = new PlayerUpdatePacketAddNotifications();
+        /* var playerUpdatePacketAddNotifications = new PlayerUpdatePacketAddNotifications();
 
         foreach (var npc in npcs)
         {

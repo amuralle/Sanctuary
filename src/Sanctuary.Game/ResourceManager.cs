@@ -42,6 +42,8 @@ public class ResourceManager : IResourceManager
     public static readonly string QuickChatsFile = Path.Combine(BaseDirectory, "QuickChats.json");
     public static readonly string PlayerTitlesFile = Path.Combine(BaseDirectory, "PlayerTitles.json");
     public static readonly string PointOfInterestsFile = Path.Combine(BaseDirectory, "PointOfInterests.json");
+    public static readonly string CollectionNodesFile = Path.Combine(BaseDirectory, "CollectionNodes.json");
+    public static readonly string CollectionSpawnRegionsFile = Path.Combine(BaseDirectory, "CollectionSpawnRegions.json");
 
     public IdToStringLookup HairMappings { get; }
     public IdToStringLookup HeadMappings { get; }
@@ -71,6 +73,8 @@ public class ResourceManager : IResourceManager
     public ProfileDefinitionCollection Profiles { get; }
     public QuickChatDefinitionCollection QuickChats { get; }
     public PointOfInterestDefinitionCollection PointOfInterests { get; }
+    public CollectionNodeDefinitionCollection CollectionNodes { get; }
+    public CollectionSpawnRegionDefinitionCollection CollectionSpawnRegions { get; }
 
     public ResourceManager(ILogger<ResourceManager> logger)
     {
@@ -108,6 +112,8 @@ public class ResourceManager : IResourceManager
         QuickChats = new(_logger);
         PlayerTitles = new(_logger);
         PointOfInterests = new(_logger);
+        CollectionNodes = new(_logger);
+        CollectionSpawnRegions = new(_logger);
     }
 
     public bool Load()
@@ -178,6 +184,12 @@ public class ResourceManager : IResourceManager
         if (!PointOfInterests.Load(PointOfInterestsFile))
             return false;
 
+        if (!CollectionNodes.Load(CollectionNodesFile))
+            return false;
+
+        if (!CollectionSpawnRegions.Load(CollectionSpawnRegionsFile))
+            return false;
+
         return true;
     }
 
@@ -234,6 +246,10 @@ public class ResourceManager : IResourceManager
                 loaded = PlayerTitles.Load(PlayerTitlesFile);
             else if (e.FullPath == PointOfInterestsFile)
                 loaded = PointOfInterests.Load(PointOfInterestsFile);
+            else if (e.FullPath == CollectionNodesFile)
+                loaded = CollectionNodes.Load(CollectionNodesFile);
+            else if (e.FullPath == CollectionSpawnRegionsFile)
+                loaded = CollectionSpawnRegions.Load(CollectionSpawnRegionsFile);
             else
                 _logger.LogWarning("Unknown file changed. File: {filepath}", e.FullPath);
 
