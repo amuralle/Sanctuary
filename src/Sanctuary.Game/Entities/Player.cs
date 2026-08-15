@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 
 using Sanctuary.Core.Collections;
 using Sanctuary.Core.IO;
@@ -146,7 +147,7 @@ public sealed class Player : ClientPcData, IEntity
         SendTunneledToVisible(new PacketDismountResponse
         {
             RiderGuid = Guid,
-            CompositeEffectId = 0
+            CompositeEffectId = 46
         }, sendToSelf: true);
 
         UpdateCharacterStats(
@@ -160,7 +161,7 @@ public sealed class Player : ClientPcData, IEntity
             Animate = false,
             Delay = 0,
             EffectDelay = 0,
-            CompositeEffectId = 46,
+            CompositeEffectId = 0,
             Duration = 1000
         }, sendToSelf: true);
 
