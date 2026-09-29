@@ -128,6 +128,7 @@ public abstract class BaseZone : IZone, IDisposable
         _started = true;
 
         GetOrCreateScriptContext().FireEvent("start");
+        ActivateExplicitCollectionCoins();
         ActivateCollectionNodePools();
 
         _updateEveryTickTask = Task.Factory.StartNew(UpdateEveryTickAsync, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
@@ -700,16 +701,23 @@ public abstract class BaseZone : IZone, IDisposable
         if (_resourceManager.Models.TryGetValue(definition.ModelId, out var model) && model.Scale != 0f)
             scale = model.Scale;
 
-        npc = new Npc(this)
+        var npcGuid = GetNpcGuid(guid);
+        npc = _resourceManager.CollectionCoins.TryGetValue(definition.Id, out var coinDefinition)
+            ? new CollectionCoin(this, coinDefinition) { Guid = npcGuid }
+            : new Npc(this) { Guid = npcGuid };
+
+        npc.NameId = definition.NameId;
+        npc.Name = definition.Name;
+        npc.ModelId = definition.ModelId;
+        npc.TextureAlias = definition.TextureAlias;
+        npc.Scale = scale;
+        npc.Visible = true;
+
+        if (npc is CollectionCoin)
         {
-            Guid = GetNpcGuid(guid),
-            NameId = definition.NameId,
-            Name = definition.Name,
-            ModelId = definition.ModelId,
-            TextureAlias = definition.TextureAlias,
-            Scale = scale,
-            Visible = true
-        };
+            npc.CursorId = 18;
+            npc.InteractRange = 12;
+        }
 
         if (!TryRegisterEntity(_npcs, npc))
         {
@@ -924,6 +932,23 @@ public abstract class BaseZone : IZone, IDisposable
         return activated;
     }
 
+    private void ActivateExplicitCollectionCoins()
+    {
+        foreach (var coinDefinition in _resourceManager.CollectionCoins.Values.Where(
+            definition => definition.HasExplicitSpawn && definition.ZoneDefinitionId == DefinitionId))
+        {
+            if (!_resourceManager.Npcs.TryGetValue(coinDefinition.NpcDefinitionId, out var npcDefinition) ||
+                !TryCreateNpc(null, npcDefinition, out var coin))
+            {
+                _logger.LogWarning("Failed to spawn collection coin NPC {NpcId}.",
+                    coinDefinition.NpcDefinitionId);
+                continue;
+            }
+
+            coin.UpdatePosition(coinDefinition.SpawnPosition, coinDefinition.SpawnRotation);
+        }
+    }
+
     private int ReconcileCollectionNodePool(string poolKey)
     {
         if (!_resourceManager.CollectionNodePools.TryGetValue(poolKey, out var poolDefinition))
@@ -983,6 +1008,7 @@ public abstract class BaseZone : IZone, IDisposable
             ModelId = typeDefinition.ModelId,
             Scale = typeDefinition.Scale,
             CompositeEffectId = typeDefinition.CompositeEffectId,
+            SubTextNameId = typeDefinition.SubTextNameId,
             InteractRange = typeDefinition.InteractRange,
             CursorId = typeDefinition.CursorId,
             Visible = true
@@ -995,6 +1021,25 @@ public abstract class BaseZone : IZone, IDisposable
         }
 
         node.UpdatePosition(spawnDefinition.SpawnPosition, spawnDefinition.SpawnRotation);
+
+        foreach (var effectId in typeDefinition.ExtraCompositeEffectIds)
+        {
+            if (!TryCreateNpc(null, out var anchor))
+                continue;
+
+            anchor.Name = typeDefinition.Name;
+            anchor.ModelId = typeDefinition.ModelId;
+            anchor.Scale = typeDefinition.Scale;
+            anchor.CompositeEffectId = effectId;
+            anchor.HideNamePlate = true;
+            anchor.IsInteractable = false;
+            anchor.InteractRange = 0;
+            anchor.CursorId = 0;
+            anchor.Visible = true;
+            anchor.UpdatePosition(spawnDefinition.SpawnPosition, spawnDefinition.SpawnRotation);
+            node.AddEffectAnchor(anchor);
+        }
+
         return true;
     }
 
