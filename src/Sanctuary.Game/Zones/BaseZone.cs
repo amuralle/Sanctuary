@@ -128,7 +128,6 @@ public abstract class BaseZone : IZone, IDisposable
         _started = true;
 
         GetOrCreateScriptContext().FireEvent("start");
-        ActivateExplicitCollectionCoins();
         ActivateCollectionNodePools();
 
         _updateEveryTickTask = Task.Factory.StartNew(UpdateEveryTickAsync, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
@@ -795,7 +794,8 @@ public abstract class BaseZone : IZone, IDisposable
             if (string.IsNullOrWhiteSpace(poolKey) ||
                 !_resourceManager.CollectionNodePools.TryGetValue(poolKey.Trim().ToLowerInvariant(), out var poolDefinition) ||
                 poolDefinition.ZoneDefinitionId != DefinitionId ||
-                !_resourceManager.CollectionNodeTypes.TryGetValue(poolDefinition.NodeType, out var typeDefinition))
+                !_resourceManager.CollectionNodeTypes.TryGetValue(poolDefinition.NodeType, out var typeDefinition) ||
+                GetTileFromPosition(position) == ZoneTile.Empty)
             {
                 return false;
             }
@@ -930,23 +930,6 @@ public abstract class BaseZone : IZone, IDisposable
             activated, pools.Length);
 
         return activated;
-    }
-
-    private void ActivateExplicitCollectionCoins()
-    {
-        foreach (var coinDefinition in _resourceManager.CollectionCoins.Values.Where(
-            definition => definition.HasExplicitSpawn && definition.ZoneDefinitionId == DefinitionId))
-        {
-            if (!_resourceManager.Npcs.TryGetValue(coinDefinition.NpcDefinitionId, out var npcDefinition) ||
-                !TryCreateNpc(null, npcDefinition, out var coin))
-            {
-                _logger.LogWarning("Failed to spawn collection coin NPC {NpcId}.",
-                    coinDefinition.NpcDefinitionId);
-                continue;
-            }
-
-            coin.UpdatePosition(coinDefinition.SpawnPosition, coinDefinition.SpawnRotation);
-        }
     }
 
     private int ReconcileCollectionNodePool(string poolKey)

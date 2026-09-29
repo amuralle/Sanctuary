@@ -32,6 +32,12 @@ public sealed class CollectionResourceCatalogTests
         Assert.IsTrue(items.Load(Path.Combine(resources, "ClientItemDefinitions.json")));
         Assert.IsTrue(npcs.Load(Path.Combine(resources, "Npcs.json")));
 
+        var collectionItemDefinitionIds = collections.Values
+            .SelectMany(collection => collection.Entries)
+            .Where(entry => entry.ItemDefinitionId > 0)
+            .Select(entry => entry.ItemDefinitionId)
+            .ToHashSet();
+
         foreach (var collection in collections.Values)
         {
             Assert.IsFalse(collection.Entries.Any(entry => entry.ItemDefinitionId > 0 &&
@@ -43,6 +49,8 @@ public sealed class CollectionResourceCatalogTests
             Assert.IsTrue(types.ContainsKey(pool.NodeType), $"Pool {pool.Key} has an unknown node type.");
             Assert.IsFalse(pool.DropTable.Any(drop => !items.ContainsKey(drop.ItemDefinitionId)),
                 $"Pool {pool.Key} has an unknown drop item.");
+            Assert.IsFalse(pool.DropTable.Any(drop => !collectionItemDefinitionIds.Contains(drop.ItemDefinitionId)),
+                $"Pool {pool.Key} has a drop item that is not part of a collection.");
         }
 
         foreach (var spawn in spawns.Values)

@@ -206,6 +206,12 @@ public class ResourceManager : IResourceManager
             }
         }
 
+        var collectionItemDefinitionIds = Collections.Values
+            .SelectMany(collection => collection.Entries)
+            .Where(entry => entry.ItemDefinitionId > 0)
+            .Select(entry => entry.ItemDefinitionId)
+            .ToHashSet();
+
         foreach (var type in CollectionNodeTypes.Values)
         {
             if (!Models.ContainsKey(type.ModelId))
@@ -228,9 +234,11 @@ public class ResourceManager : IResourceManager
         foreach (var pool in CollectionNodePools.Values)
         {
             if (!CollectionNodeTypes.ContainsKey(pool.NodeType) ||
-                pool.DropTable.Any(drop => !ClientItemDefinitions.ContainsKey(drop.ItemDefinitionId)))
+                pool.DropTable.Any(drop => !ClientItemDefinitions.ContainsKey(drop.ItemDefinitionId) ||
+                    !collectionItemDefinitionIds.Contains(drop.ItemDefinitionId)))
             {
-                _logger.LogError("Collection node pool {pool} has an invalid node type or drop reference.", pool.Key);
+                _logger.LogError("Collection node pool {pool} has an invalid node type or collection drop reference.",
+                    pool.Key);
                 return false;
             }
         }
@@ -341,12 +349,6 @@ public class ResourceManager : IResourceManager
                 return false;
             }
 
-            if (coin.HasExplicitSpawn && !Zones.ContainsKey(coin.ZoneDefinitionId))
-            {
-                _logger.LogError("Collection coin NPC {npc} references unknown zone {zone}.",
-                    coin.NpcDefinitionId, coin.ZoneDefinitionId);
-                return false;
-            }
         }
 
         if (!Maps.Load(MapsDirectory))

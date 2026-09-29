@@ -37,9 +37,7 @@ public sealed class CollectionCoinDefinitionCollection : ObservableConcurrentDic
             });
 
             if (definitions is null || definitions.Count == 0 || definitions.Any(definition =>
-                    definition.NpcDefinitionId <= 0 || definition.CollectionId <= 0 || definition.EntryId <= 0 ||
-                    definition.ZoneDefinitionId < 0 ||
-                    (definition.ZoneDefinitionId > 0) != (definition.Position is { Length: 3 })) ||
+                    definition.NpcDefinitionId <= 0 || definition.CollectionId <= 0 || definition.EntryId <= 0) ||
                 definitions.Select(definition => definition.NpcDefinitionId).Distinct().Count() != definitions.Count ||
                 definitions.Select(definition => definition.EntryId).Distinct().Count() != definitions.Count)
             {
