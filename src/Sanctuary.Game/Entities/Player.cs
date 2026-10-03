@@ -60,6 +60,8 @@ public sealed class Player : ClientPcData, IEntity
 
     public ConcurrentDictionary<ChatChannel, bool> ChatChannelStatus { get; set; } = [];
 
+    public ConcurrentSet<int> CollectedCollectionEntryIds { get; } = [];
+
     public int StationCash { get; set; }
     public List<CoinStoreTransactionRecord> CoinStoreTransactions { get; set; } = [];
 
@@ -87,6 +89,8 @@ public sealed class Player : ClientPcData, IEntity
     // animation, a boombox poof) - see PlayerEffect/AddEffect for anything with its own state.
     // Min-heap ordered by send time.
     private readonly PriorityQueue<(ISerializablePacket Packet, bool SendToSelf), DateTimeOffset> _delayedPackets = new();
+    // Collection UI transitions are private to this player and must not reach visible neighbors.
+    private readonly PriorityQueue<ISerializablePacket, DateTimeOffset> _delayedPersonalPackets = new();
 
     // One scheduled personal-UI packet per action bar slot (the cooldown re-enable) - keyed, not queued,
     // so a slot that gets emptied before its cooldown naturally expires (last item consumed) can cancel
@@ -174,6 +178,14 @@ public sealed class Player : ClientPcData, IEntity
         }
     }
 
+    public void SendTunneledDelayed(ISerializablePacket packet, int delayMs)
+    {
+        lock (_delayedPersonalPackets)
+        {
+            _delayedPersonalPackets.Enqueue(packet, DateTimeOffset.UtcNow.AddMilliseconds(delayMs));
+        }
+    }
+
     public bool IsMuted()
     {
         DateTimeOffset currentTime = DateTimeOffset.UtcNow;
@@ -239,6 +251,21 @@ public sealed class Player : ClientPcData, IEntity
             }
 
             SendTunneledToVisible(due.Packet, due.SendToSelf);
+        }
+
+        while (true)
+        {
+            ISerializablePacket packet;
+
+            lock (_delayedPersonalPackets)
+            {
+                if (!_delayedPersonalPackets.TryPeek(out _, out var sendAt) || sendAt > now)
+                    break;
+
+                packet = _delayedPersonalPackets.Dequeue();
+            }
+
+            SendTunneled(packet);
         }
 
         foreach (var (key, scheduled) in _delayedSlotPackets)
@@ -429,7 +456,9 @@ public sealed class Player : ClientPcData, IEntity
 
     public void OnAddVisibleNpcs(params IEnumerable<Npc> npcs)
     {
-        foreach (var npc in npcs)
+        var visibleNpcs = npcs.Where(npc => npc.IsVisibleTo(this)).ToArray();
+
+        foreach (var npc in visibleNpcs)
         {
             if (npc is Mount)
                 continue;
@@ -439,7 +468,7 @@ public sealed class Player : ClientPcData, IEntity
 
         var playerUpdatePacketNpcRelevance = new PlayerUpdatePacketNpcRelevance();
 
-        foreach (var npc in npcs)
+        foreach (var npc in visibleNpcs)
         {
             if (npc.CursorId == 0)
                 continue;
@@ -457,7 +486,7 @@ public sealed class Player : ClientPcData, IEntity
 
         var playerUpdatePacketAddNotifications = new PlayerUpdatePacketAddNotifications();
 
-        foreach (var npc in npcs)
+        foreach (var npc in visibleNpcs)
         {
             if (npc.Notification is null)
                 continue;
@@ -468,7 +497,7 @@ public sealed class Player : ClientPcData, IEntity
         if (playerUpdatePacketAddNotifications.Notifications.Count > 0)
             SendTunneled(playerUpdatePacketAddNotifications);
 
-        foreach (var npc in npcs)
+        foreach (var npc in visibleNpcs)
             VisibleNpcs.TryAdd(npc.Guid, npc);
     }
 
